@@ -1,3 +1,3 @@
 # otus-linux
 
-- [HW1 - Сборка ядра](./hw1/README.md)
+- [HW1 - Сборка ядра](./HW1/README.md)
