@@ -105,6 +105,7 @@ sudo grub2-set-default 0
 
 ```bash
 sudo reboot
+```
 
 После перезагрузки виртуальной машины (3-4 минуты, зависит от мощности хостовой машины) заходим в нее и выполняем:
 
@@ -211,7 +212,7 @@ vagrant box remove centos-7-9
 vagrant cloud auth login
 ```
 
-Теперь публикуем полученный бокс в [vagrant cloud](https://app.vagrantup.com/kovtalex/boxes/centos-7.9/versions/1.0.0/providers/virtualbox.box):
+Теперь публикуем полученный бокс в [vagrant cloud](https://app.vagrantup.com/kovtalex/boxes/centos-7.9):
 
 ```bash
 vagrant cloud publish --release kovtalex/centos-7.9 1.0.0 virtualbox centos-7.9.2009-kernel-5-x86_64-Minimal.box
@@ -382,7 +383,7 @@ lsmod | grep vboxguest
 vboxguest             425984  2 vboxsf
 ```
 
-Публикуем наш образ в [vagrant cloud](https://app.vagrantup.com/kovtalex/boxes/centos-7.9_vboxguest/versions/1.0.0/providers/virtualbox.box):
+Публикуем наш образ в [vagrant cloud](https://app.vagrantup.com/kovtalex/boxes/centos-7.9_vboxguest):
 
 ```bash
 vagrant cloud publish --release kovtalex/centos-7.9_vboxguest 1.0.0 virtualbox centos-7.9.2009-kernel-5-x86_64-Minimal-vboxguest.box
