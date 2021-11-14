@@ -222,7 +222,7 @@ storage/compressed/zle     1.06G   250M     1.06G  /storage/compressed/zle
 - Удалим наш пул storage
 
 ```bash
-zpool destroy zfs
+zpool destroy storage
 ```
 
 - Загрузим архив с файлами на vagrant vm через shared folder. (<https://drive.google.com/open?id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg>)
@@ -233,7 +233,7 @@ zpool destroy zfs
 tar zxvf zfs_task1.tar.gz
 ```
 
-- С помощью команды zfs import соберем pool ZFS
+- С помощью команды zpool import соберем pool ZFS
 
 ```bash
 zpool import -d zpoolexport/
