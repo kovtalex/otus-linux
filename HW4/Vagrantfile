@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+ENV['VAGRANT_EXPERIMENTAL'] = "disks"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = 'centos/8.4'
+  config.vm.box_url = 'https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.4.2105-20210603.0.x86_64.vagrant-virtualbox.box'
+  config.vm.box_download_checksum = 'dfe4a34e59eb3056a6fe67625454c3607cbc52ae941aeba0498c29ee7cb9ac22'
+  config.vm.box_download_checksum_type = 'sha256'
+
+  config.vm.synced_folder ".", "/vagrant"
+
+  config.vm.define "zfs" do |box|
+  
+    box.vm.host_name = "zfs"
+
+    box.vm.provider "virtualbox" do |vb|
+
+      vb.memory = "1024"
+    end
+  
+    box.vm.disk :disk, size: "1GB", name: "disk1"
+    box.vm.disk :disk, size: "1GB", name: "disk2"
+    box.vm.disk :disk, size: "1GB", name: "disk3"
+  
+  
+    box.vm.provision "shell",
+      name: "Setup zfs",
+      path: "setup_zfs.sh"
+    end
+
+end
