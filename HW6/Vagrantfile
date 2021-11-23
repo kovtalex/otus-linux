@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = 'centos/7'
+  config.vm.box_url = 'https://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box'
+  config.vm.box_download_checksum = '7e83943defcb5c4e9bebbe4184cce4585c82805a15e936b01b1e893b63dee2c5'
+  config.vm.box_download_checksum_type = 'sha256'
+
+  # config.vm.synced_folder ".", "/vagrant"
+
+  config.vm.define "hw6" do |box|
+  
+    box.vm.host_name = "hw6"
+
+    box.vm.provider "virtualbox" do |vb|
+      vb.cpus = 2      
+      vb.memory = 1024
+    end
+
+    box.vm.provision "shell", inline: <<-SHELL
+      mkdir -p ~root/.ssh
+      cp ~vagrant/.ssh/auth* ~root/.ssh
+      yum install -y redhat-lsb-core wget rpmdevtools rpm-build createrepo yum-utils gcc perl-IPC-Cmd perl-Data-Dumper
+    SHELL
+  end  
+end
