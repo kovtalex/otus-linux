@@ -14,7 +14,7 @@ lowPriority()
 
 hiPriority() {
   echo "$(date) - Start dd with hi IO priority." >> /tmp/ionice.log
- gionice -c2 -n0 dd if=/dev/random of=/tmp/ioniceHiPri.tmp bs=64M count=2 oflag=dsync > /dev/null 2>&1
+  ionice -c2 -n0 dd if=/dev/random of=/tmp/ioniceHiPri.tmp bs=64M count=2 oflag=dsync > /dev/null 2>&1
   echo "$(date) - Stop dd with hi IO priority." >> /tmp/ionice.log
 }
 
