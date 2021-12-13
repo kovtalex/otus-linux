@@ -2,14 +2,14 @@
 
 Напишем [скрипт](./ionice.sh) запускающий 2 процесса с разными ionice, замеряющий время выполнения и выводящий лог в консоль.
 
-В процессе работы скрипта создаются процессы записи на диск файла размером 5Гб с наименьшим и наибольшим приоритетом.  
-По логу скрипта видим, что процесс с наибольшим приоритетом отработал на 5 секунд быстрее.
+В процессе работы скрипта создаются процессы записи на диск файла размером 128Мб с наименьшим и наибольшим приоритетом.  
+По логу скрипта видим, что процесс с наибольшим приоритетом отработал на 2 минуты быстрее.
 
 Результат работы скрипта:
 
 ```bash
-Tue Dec 14 00:09:51 MSK 2021 - Start dd with hi IO priority.
-Tue Dec 14 00:09:51 MSK 2021 - Start dd with low IO priority.
-Tue Dec 14 00:09:51 MSK 2021 - Stop dd with hi IO priority.
-Tue Dec 14 00:09:56 MSK 2021 - Stop dd with low IO priority.
+Tue Dec 14 00:30:24 MSK 2021 - Start dd with hi IO priority.
+Tue Dec 14 00:30:24 MSK 2021 - Start dd with low IO priority.
+Tue Dec 14 00:30:59 MSK 2021 - Stop dd with hi IO priority.
+Tue Dec 14 00:32:52 MSK 2021 - Stop dd with low IO priority.
 ```

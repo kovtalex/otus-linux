@@ -8,13 +8,13 @@ cp /dev/null /tmp/ionice.log
 lowPriority()
 {
   echo "$(date) - Start dd with low IO priority." >> /tmp/ionice.log
-  ionice -c2 -n7 dd if=/dev/zero of=/tmp/ioniceLowPri.tmp bs=64M count=80 oflag=dsync > /dev/null 2>&1
+  ionice -c2 -n7 dd if=/dev/random of=/tmp/ioniceLowPri.tmp bs=64M count=2 oflag=dsync > /dev/null 2>&1
   echo "$(date) - Stop dd with low IO priority." >> /tmp/ionice.log
 }
 
 hiPriority() {
   echo "$(date) - Start dd with hi IO priority." >> /tmp/ionice.log
- gionice -c1 -n0 dd if=/dev/zero of=/tmp/ioniceHiPri.tmp bs=64M count=80 oflag=dsync > /dev/null 2>&1
+ gionice -c2 -n0 dd if=/dev/random of=/tmp/ioniceHiPri.tmp bs=64M count=2 oflag=dsync > /dev/null 2>&1
   echo "$(date) - Stop dd with hi IO priority." >> /tmp/ionice.log
 }
 
