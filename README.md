@@ -7,6 +7,6 @@
 - [HW5 - ]
 - [HW6 - Размещение своего RPM в своем репозитории](./HW6/README.md)
 - [HW7 - Работа с загрузчиком](./HW7/README.md)
-- [HW8 - ]
+- [HW8 - Systemd](./HW8/README.md)
 - [HW9 - Пишем скрипт](./HW9/README.md)
 - [HW10 - Работает с процессами](./HW10/README.md)
