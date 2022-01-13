@@ -211,3 +211,14 @@ hr {width: 934px; background-color: #ccc; border: 0; height: 1px;}
 <tr><td class="e">Build Date </td><td class="v">Dec 21 2021 19:45:33 </td></tr>
 ...
 ```
+
+- Выгружаем на docker hub
+
+```bash
+make push
+```
+
+- Ссылки на образы
+
+> https://hub.docker.com/repository/docker/kovtalex/nginx
+> https://hub.docker.com/repository/docker/kovtalex/php-fpm
