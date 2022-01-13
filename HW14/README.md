@@ -1,7 +1,7 @@
 # Docker, docker image, docker container
 
 - Создадим свой кастомный образ nginx на базе alpine. После запуска nginx будет отдавать кастомную страницу (достаточно изменить дефолтную страницу nginx)
-- Определим разницу между контейнером и образом. Вывод опишем в домашнем задании.
+- Определим разницу между контейнером и образом. Вывод опишем в домашнем задании
 - Ответим на вопрос: Можно ли в контейнере собрать ядро?
 - Собранный образ запушим в docker hub и дадим ссылку на наш репозиторий
 - Задание со *
@@ -44,7 +44,7 @@ curl localhost:8080
 </html>
 ```
 
-> Разница в контейнере и образе заключается в том, что в отличии от RO слоев образа контейнер имеет RW слой для работы приложения  
+> Разница в контейнере и образе заключается в том, что в отличии от RO слоев образа контейнер имеет RW слой для работы приложения.
 > Также в контейнере можно собрать ядро. Как пример можно присмотреться к проекту <https://github.com/a13xp0p0v/kernel-build-containers>
 
 - Запушим собранный образ на docker hub
@@ -52,14 +52,14 @@ curl localhost:8080
 ```bash
 docker login ...
 
-docker push 
+docker push kovtalex/nginx:v1
 ```
 
 > Ссылка на репозиторий с кастомным nginx <https://hub.docker.com/repository/docker/kovtalex/nginx>
 
 ## Задание со *
 
-- Создадим кастомные образы nginx и php, объедините их в docker-compose
+- Создадим кастомные образы nginx и php, объединим их в docker-compose
 - После запуска nginx должен показывать php info
 - Все собранные образы выгрузим в docker hub
 
@@ -99,7 +99,7 @@ COPY site.conf /etc/nginx/conf.d/default.conf
 COPY index.php /
 ```
 
-Дополним docker-entrypoint.sh для того чтобы использовать каталог php как общий volume с контейнером php-fpm
+Дополним docker-entrypoint.sh для того чтобы использовать каталог php как общий с контейнером php-fpm в виде volume
 
 ```bash
 cp -f /index.php /php/ || true
@@ -220,5 +220,5 @@ make push
 
 - Ссылки на образы
 
-> https://hub.docker.com/repository/docker/kovtalex/nginx
+> https://hub.docker.com/repository/docker/kovtalex/nginx  
 > https://hub.docker.com/repository/docker/kovtalex/php-fpm
