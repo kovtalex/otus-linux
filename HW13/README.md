@@ -64,7 +64,7 @@ Password:
 
 > Неудача, т.к. не хватает прав
 
-- теперь попробуем залогиниться пользователем test_docker входящий в группу docker и admin
+- теперь попробуем залогиниться пользователем test_docker входящим в группу docker и admin
 
 ```bash
 ssh -o IdentitiesOnly=yes test_docker@127.0.0.1 -p 2222
