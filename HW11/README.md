@@ -48,7 +48,7 @@ working. Further configuration is required.</p>
 pip install -r requirements.txt
 ```
 
-- добавим несколько [тестов](./nginx/molecule/default/tests/test_default.py), используя модули Testinfra для проверки конфигурации, что nginx установлен, запущен, запустится после перезагрузки сервера и отвечает на 8080 порту [конфигурация](./nginx/molecule/default/molecule.yml)
+- добавим несколько [тестов](./nginx/molecule/default/tests/test_default.py), используя модули Testinfra для проверки конфигурации, что nginx установлен, запущен, запустится после перезагрузки сервера и отвечает на 8080 порту ([конфигурация](./nginx/molecule/default/molecule.yml))
 
 - проверяем
 
