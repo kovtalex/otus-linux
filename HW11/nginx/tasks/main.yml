@@ -1,0 +1,23 @@
+---
+# tasks file for nginx
+- name: Add nginx repo
+  copy: src=nginx.repo dest=/etc/yum.repos.d/ mode='0644'
+
+- name: Install packages
+  yum: pkg={{ item }} state=present enablerepo=nginx-stable
+  with_items:
+    - nginx
+
+- name: Start nginx
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started
+
+- name: Add config
+  template:
+    src: default.conf
+    dest: "/etc/nginx/conf.d/default.conf"
+    mode: '0644'
+  notify:
+    - nginx reload

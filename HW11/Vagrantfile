@@ -1,0 +1,35 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = 'centos/7'
+  config.vm.box_url = 'https://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box'
+  config.vm.box_download_checksum = '7e83943defcb5c4e9bebbe4184cce4585c82805a15e936b01b1e893b63dee2c5'
+  config.vm.box_download_checksum_type = 'sha256'
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+
+  config.vm.define "webserver" do |web|
+
+    web.vm.host_name = "webserver"
+
+    web.vm.provider "virtualbox" do |vb|
+      vb.cpus = 1      
+      vb.memory = 1024
+    end
+
+    web.vm.provision "ansible" do |ansible|
+      ansible.playbook = "web.yml"
+      ansible.groups = {
+        "web" => ["webserver"]
+      }
+      ansible.extra_vars = {
+        "listen_port" => "8080"
+      }      
+    end
+
+  end  
+end

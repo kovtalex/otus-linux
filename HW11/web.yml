@@ -1,0 +1,7 @@
+---
+- name: Install nginx on web
+  hosts: web
+  become: true
+  
+  roles:
+    - role: nginx
