@@ -5,7 +5,7 @@
 
 ## Для выполения первой части ДЗ был
 
-- использован модуль PAM pam_exec.so и написан скрипт [pam_script.sh](./pam_script.sh)
+- использован модуль pam_exec.so и написан скрипт [pam_script.sh](./pam_script.sh)
 - создан тестовый пользователь test_admin входящий в группу admin
 
 ## Для выполения второй части ДЗ была
@@ -37,7 +37,7 @@ Connection closed by 127.0.0.1 port 2222
 
 > Нас постигнет неудача, т.к. сегодня воскресенье
 
-- теперь попробуем залогиниться пользователем test_admin входящий в группу admin
+- теперь попробуем залогиниться пользователем test_admin входящим в группу admin
 
 ```bash
 ssh -o IdentitiesOnly=yes test_admin@127.0.0.1 -p 2222
@@ -50,7 +50,7 @@ test_admin@127.0.0.1's password:
 - попробуем запустить контейнер и перезапустить сервис docker с текущим пользователем
 
 ```bash
-[test_admin@hw13 ~]$ docker run nginx -d
+[test_admin@hw13 ~]$ docker run -d nginx
 docker: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Post "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/create": dial unix /var/run/docker.sock: connect: permission denied.
 See 'docker run --help'.
 
@@ -71,7 +71,7 @@ ssh -o IdentitiesOnly=yes test_docker@127.0.0.1 -p 2222
 test_docker@127.0.0.1's password: 
 
 [test_docker@hw13 ~]$
-[test_docker@hw13 ~]$ docker run nginx -d
+[test_docker@hw13 ~]$ docker run -d nginx
 Unable to find image 'nginx:latest' locally
 latest: Pulling from library/nginx
 a2abf6c4d29d: Pull complete 
@@ -85,7 +85,7 @@ Status: Downloaded newer image for nginx:latest
 f6900fc740e5bca42c11422c7630ce377c3bac6ebd5ae7423ad7f6e88f1ef297
 
 
-[test_docker@hw13 ~]$ sdocker ps -a
+[test_docker@hw13 ~]$ docker ps -a
 CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS     NAMES
 f6900fc740e5   nginx     "/docker-entrypoint.…"   33 seconds ago   Up 32 seconds   80/tcp    focused_gauss
 
