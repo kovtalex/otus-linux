@@ -1,0 +1,32 @@
+---
+# tasks file for rsyslog
+- name: Fix rsyslog.conf
+  lineinfile:
+    dest: /etc/rsyslog.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: '^#\$ModLoad imudp', line: '$ModLoad imudp' }
+    - { regexp: '^#\$UDPServerRun 514', line: '$UDPServerRun 514' }
+    - { regexp: '^#\$ModLoad imtcp', line: '$ModLoad imtcp' }
+    - { regexp: '^#\$InputTCPServerRun 514', line: '$InputTCPServerRun 514' }    
+  notify:
+    - rsyslog restart
+
+- name: Fix rsyslog.conf
+  blockinfile:
+    path: /etc/rsyslog.conf
+    block: |
+      $template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"
+      *.* ?RemoteLogs
+      & ~  
+  notify:
+    - rsyslog restart
+
+- name: Fix auditd.conf
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^##tcp_listen_port'
+    line: tcp_listen_port = 60
+  notify:
+    - auditd restart

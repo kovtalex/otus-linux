@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+    config.vm.box_url = 'https://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box'
+    config.vm.box_download_checksum = '7e83943defcb5c4e9bebbe4184cce4585c82805a15e936b01b1e893b63dee2c5'
+    config.vm.box_download_checksum_type = 'sha256'
+
+    config.vm.provider "virtualbox" do |v|
+        v.memory = 512
+        v.cpus = 1
+    end
+
+    config.vm.define "rsyslog" do |log|
+        log.vm.network "private_network", ip: "192.168.50.11", virtualbox__intnet: "net1"
+        log.vm.hostname = "rsyslog"
+    end
+
+    config.vm.define "elk" do |elk|
+        elk.vm.network "private_network", ip: "192.168.50.12", virtualbox__intnet: "net1"
+        elk.vm.hostname = "elk"
+        elk.vm.network "forwarded_port", guest: 5601, host: 5601
+        config.vm.provider :virtualbox do |vb|
+            vb.customize ["modifyvm", :id, "--memory", "2048"]
+            vb.customize ["modifyvm", :id, "--cpus", "1"]
+        end
+    end
+        
+    config.vm.define "web" do |web|
+        web.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "net1"
+        web.vm.hostname = "web"
+        web.vm.network "forwarded_port", guest: 80, host: 80
+    end   
+
+    config.vm.provision "ansible" do |ansible|
+        ansible.playbook = "playbook.yml"
+        ansible.become = true
+        ansible.limit = "all"
+        ansible.host_key_checking = "false"
+        # ansible.inventory_path = "ansible/hosts"        
+        ansible.groups = {
+          "webservers" => ["web"],
+          "rsyslogservers" => ["rsyslog"],
+          "elkservers" => ["elk"]
+        }
+        # ansible.extra_vars = {
+        #   "listen_port" => "80"
+        # }      
+    end    
+end

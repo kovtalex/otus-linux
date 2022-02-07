@@ -1,0 +1,99 @@
+---
+# tasks file for elk
+- name: Add elasticsearch repo
+  copy: src=elasticsearch.repo dest=/etc/yum.repos.d/ mode='0644'
+
+- name: Install packages
+  yum: pkg={{ item }} state=present update_cache=yes
+  with_items:
+    - java-1.8.0-openjdk
+    - elasticsearch
+    - logstash
+    - kibana
+
+- name: Set min JVM Heap size.
+  lineinfile:
+    dest: /etc/elasticsearch/jvm.options
+    regexp: "^-Xms"
+    line: "-Xms{{ elasticsearch_jvm_xms }}"
+  notify: elasticsearch restart
+  tags:
+    - config
+
+- name: Set max JVM Heap size.
+  lineinfile:
+    dest: /etc/elasticsearch/jvm.options
+    regexp: "^-Xmx"
+    line: "-Xmx{{ elasticsearch_jvm_xmx }}"
+  notify: elasticsearch restart    
+  tags:
+    - config
+
+- name: Configure elasticsearch.yml
+  copy:
+    src: elasticsearch.yml
+    dest: /etc/elasticsearch/elasticsearch.yml
+    owner: root
+    group: elasticsearch
+    mode: '0644'
+  notify: elasticsearch restart
+  
+- name: Add or modify memlock, both soft and hard, limit for elasticsearch user.
+  pam_limits:
+    domain: elasticsearch
+    limit_type: '-'
+    limit_item: memlock
+    value: unlimited
+    comment: unlimited memory lock for elasticsearch
+  notify: elasticsearch restart    
+
+- name: set LimitMEMLOCK to infinity.
+  lineinfile:
+    path: /usr/lib/systemd/system/elasticsearch.service
+    insertafter: 'LimitAS=infinity'
+    line: 'LimitMEMLOCK=infinity'
+    state: present
+  notify: elasticsearch restart    
+
+- name: set vm.max_map_count to 262144 in sysctl
+  sysctl: name={{ item.key }} value={{ item.value }}
+  with_items:
+    - { key: "vm.max_map_count", value: "262144" }
+  notify: elasticsearch restart    
+
+- name: For a permanent setting, update vm.max_map_count in /etc/sysctl.conf
+  command: sysctl -p /etc/sysctl.conf
+  notify: elasticsearch restart  
+
+- name: Start elasticsearch service
+  systemd:
+    name: elasticsearch
+    enabled: yes
+    state: started
+
+- name: Configure kibana.yml
+  copy:
+    src: kibana.yml
+    dest: /etc/kibana/kibana.yml
+    mode: '0644'
+  notify: kibana restart     
+
+- name: Start kibana service
+  systemd:
+    name: kibana
+    enabled: yes
+    state: started
+
+- name: Configure logstash.yml
+  copy: src=logstash.yml dest=/etc/logstash/logstash.yml mode='0644'
+  notify: logstash restart 
+
+- name: Add config pipeline.conf
+  copy: src=pipeline.conf dest=/etc/logstash/conf.d/pipeline.conf mode='0644'
+  notify: logstash restart 
+
+- name: Start logstash service
+  systemd:
+    name: logstash
+    enabled: yes
+    state: started

@@ -1,0 +1,4 @@
+---
+# defaults file for elk
+elasticsearch_jvm_xms: 1g
+elasticsearch_jvm_xmx: 1g

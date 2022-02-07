@@ -11,3 +11,6 @@
 .molecule
 .cache
 .pytest_cache
+
+.travis.yml
+.yamllint

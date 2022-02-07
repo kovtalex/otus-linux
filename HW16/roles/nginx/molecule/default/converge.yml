@@ -1,0 +1,8 @@
+---
+- name: Converge
+  become: true
+  gather_facts: false
+  hosts: all
+
+  roles:
+    - role: nginx

@@ -1,0 +1,19 @@
+filebeat.modules:
+- module: nginx
+  access:
+    enabled: true
+    var.paths: ["/var/log/nginx/access.log*"]
+  error:
+    enabled: true
+    var.paths: ["/var/log/nginx/error.log*"]
+  ingress_controller:
+    enabled: false    
+
+output:
+  logstash:
+    enabled: true
+    hosts:
+      - "{{ hostvars['elk']['ansible_eth1']['ipv4']['address'] }}:5044"
+
+logging.json: true
+logging.metrics.enabled: false

@@ -1,0 +1,26 @@
+---
+# - name: Display all variables/facts known for a host
+#   hosts: rsyslog
+#   tasks:
+#     - debug: var=hostvars['rsyslog']
+
+- name: Configure timezone setting
+  hosts: all
+  roles:
+    - role: ntpd
+
+- name: Install and configure web server
+  hosts: webservers
+  roles:
+    - role: nginx
+    - role: filebeat
+
+- name: Configure rsyslog
+  hosts: rsyslogservers
+  roles:
+    - role: rsyslog
+
+- name: Install and configure elk
+  hosts: elkservers
+  roles:
+    - role: elk

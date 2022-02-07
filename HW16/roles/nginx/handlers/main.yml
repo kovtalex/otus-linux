@@ -1,0 +1,9 @@
+---
+# handlers file for nginx
+- name: nginx reload
+  systemd:
+    name: nginx
+    state: reloaded
+
+- name: auditd restart
+  command: /sbin/service auditd condrestart

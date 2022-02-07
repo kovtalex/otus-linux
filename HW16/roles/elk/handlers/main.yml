@@ -1,0 +1,17 @@
+---
+# handlers file for elk
+- name: elasticsearch restart
+  systemd:
+    name: elasticsearch
+    state: restarted
+    daemon_reload: yes
+
+- name: kibana restart
+  systemd:
+    name: kibana
+    state: restarted
+
+- name: logstash restart
+  systemd:
+    name: logstash
+    state: restarted

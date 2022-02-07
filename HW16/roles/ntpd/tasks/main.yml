@@ -1,0 +1,5 @@
+---
+# tasks file for ntpd
+- name: set timezone to Europe/Moscow
+  timezone:
+    name: Europe/Moscow

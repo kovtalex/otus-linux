@@ -1,0 +1,26 @@
+---
+# tasks file for filebeat
+- name: Add elasticsearch repo
+  copy: src=elasticsearch.repo dest=/etc/yum.repos.d/ mode='0644'
+
+- name: Install packages
+  yum: pkg={{ item }} state=present update_cache=yes
+  with_items:
+    - filebeat
+
+- name: Add config
+  template:
+    src: filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+    mode: '0644'
+  notify:
+    - filebeat restart    
+
+- name: Start filebeat
+  systemd:
+    name: filebeat
+    enabled: yes
+    state: started
+
+# - name: Setup all components related to Elasticsearch index management, including template, ilm policy and rollover alias
+#   command: filebeat setup -E output.logstash.enabled=false -E output.elasticsearch.hosts=["{{ hostvars['elk']['ansible_eth1']['ipv4']['address'] }}:9200"] -E setup.kibana.host={{ hostvars['elk']['ansible_eth1']['ipv4']['address'] }}:5601

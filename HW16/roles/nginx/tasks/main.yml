@@ -1,0 +1,65 @@
+---
+# tasks file for nginx
+- name: Add nginx repo
+  copy: src=nginx.repo dest=/etc/yum.repos.d/ mode='0644'
+
+- name: Install packages
+  yum: pkg={{ item }} state=present update_cache=yes
+  with_items:
+    - nginx
+    - audispd-plugins
+
+- name: Add default config
+  template:
+    src: default.conf.j2
+    dest: /etc/nginx/conf.d/default.conf
+    mode: '0644'
+  notify:
+    - nginx reload
+
+- name: Add nginx config
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    mode: '0644'
+  notify:
+    - nginx reload
+
+- name: Start nginx
+  systemd:
+    name: nginx
+    enabled: yes
+    state: started    
+
+- name: Fix auditd.rules
+  blockinfile:
+    path: /etc/audit/rules.d/audit.rules
+    block: |
+      -w /etc/nginx/nginx.conf -p wa -k nginx_conf
+      -w /etc/nginx/default.d/ -p wa -k nginx_conf    
+  notify:
+    - auditd restart
+
+- name: Fix auditd.conf
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^name_format ='
+    line: name_format = HOSTNAME
+  notify:
+    - auditd restart
+
+- name: Fix au-remote.conf
+  lineinfile:
+    path: /etc/audisp/plugins.d/au-remote.conf
+    regexp: '^active ='
+    line: active = yes
+  notify:
+    - auditd restart
+
+- name: Fix audisp-remote.conf
+  lineinfile:
+    path: /etc/audisp/audisp-remote.conf
+    regexp: '^remote_server ='
+    line: "remote_server = {{ hostvars['rsyslog']['ansible_eth1']['ipv4']['address'] }}"
+  notify:
+    - auditd restart
