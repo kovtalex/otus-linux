@@ -1,0 +1,79 @@
+---
+- hosts: DynamicWeb # имя хоста, который мы создадим Vagrant`om
+  become: yes # Установка Docker через sudo
+  gather_facts: false
+
+  tasks: # Перечисляем задачи которые выполнит наш playbook
+    - name: Install docker packages # устанавливаем пакеты необходимые для установки докера
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+      tags:
+        - docker
+
+    - name: Add Docker s official GPG key
+      apt_key: 
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      tags:
+        - docker
+
+    - name: Verify that we have the key with the fingerprint
+      apt_key:
+        id: 0EBFCD88
+        state: present
+      tags:
+        - docker
+
+    - name: Set up the stable repository # добавляем репозиторий докера
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+        state: present
+        update_cache: yes
+      tags:
+        - docker
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+      tags:
+        - docker
+
+    - name: Install docker # установка докера
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+      tags:
+        - docker
+
+    - name: Add remote "vagrant" user to "docker" group
+      user:
+        name: vagrant
+        groups: docker
+        append: yes
+      tags:
+        - docker
+
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: 0777
+
+    - name: Copy project # Копируем проект с хост машины в созданную через vagrant
+      copy: src=project dest=/home/vagrant mode=0644 owner=vagrant group=vagrant directory_mode=
+
+    - name: reset ssh connection # чтобы применились права на использование docker, необходимо перелогиниться
+      meta: reset_connection
+
+    - name: Run container
+      shell:
+        cmd: "docker-compose -f docker-compose.yml -f wp-auto-config.yml run --rm wp-auto-config"
+        chdir: /home/vagrant/project
