@@ -26,5 +26,5 @@
 - [HW24 - Строим бонды и вланы](./HW24/README.md)
 - [HW25 - LDAP](./HW25/README.md)
 - [HW26 - Развертывание веб приложения](./HW26/README.md)
-- [HW27 - Репликация mysql](./HW27/README.md)
-- [HW28 - Репликация PostgreSQL](./HW28/README.md)
+- [HW27 - Репликация PostgreSQL](./HW27/README.md)
+- [HW28 - Репликация mysql](./HW28/README.md)
