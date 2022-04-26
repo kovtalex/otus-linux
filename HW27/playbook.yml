@@ -1,0 +1,38 @@
+---
+- name: Install PostgreSQL
+  hosts: db
+  become: true
+
+  tasks:
+    - name: Set up Postgres 14 repo
+      shell: |
+        echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+        wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+      args:
+        warn: no
+    - name: Install the latest version of PostgreSQL
+      apt:
+        name: postgresql-14
+        update_cache: yes
+        state: present
+    - name: Update postgresql.conf file
+      lineinfile:
+        path: /etc/postgresql/14/main/postgresql.conf
+        line: "listen_addresses = '*'"
+      notify: Restart PostgreSQL
+    - name: Update pg_hba.conf file
+      lineinfile:
+        path: /etc/postgresql/14/main/pg_hba.conf
+        line: "host all postgres 0.0.0.0/0 md5"
+      notify: Restart PostgreSQL
+    - name: Update pg_hba.conf file
+      lineinfile:
+        path: /etc/postgresql/14/main/pg_hba.conf
+        line: "host replication postgres 0.0.0.0/0 md5"
+      notify: Restart PostgreSQL
+
+  handlers:
+    - name: Restart PostgreSQL
+      systemd: 
+        name=postgresql
+        state=restarted
