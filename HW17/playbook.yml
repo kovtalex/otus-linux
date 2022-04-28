@@ -1,0 +1,20 @@
+---
+# - name: Display all variables/facts known for a host
+#   hosts: rsyslog
+#   tasks:
+#     - debug: var=hostvars['rsyslog']
+
+- name: Bootstrap
+  hosts: all
+  roles:
+    - role: bootstrap
+
+- name: Install and configure client
+  hosts: client
+  roles:
+    - role: client
+
+- name: Install and configure backup server
+  hosts: backup_server
+  roles:
+    - role: backup_server

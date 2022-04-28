@@ -1,0 +1,27 @@
+[Unit]
+Description=Borg Backup
+
+[Service]
+Type=oneshot
+
+# Парольная фраза
+Environment=BORG_PASSPHRASE={{ passphrase }}
+# Репозиторий
+Environment=REPO=borg@{{ hostvars['backup_server']['ansible_eth1']['ipv4']['address'] }}:/var/backup/
+# Что бэкапим
+Environment=BACKUP_TARGET=/etc
+
+# Создание бэкапа
+ExecStart=/bin/borg create \
+  --stats \
+  ${REPO}::etc-{now:%%Y-%%m-%%d_%%H:%%M:%%S} ${BACKUP_TARGET}
+
+# Проверка бэкапа
+ExecStart=/bin/borg check ${REPO}
+
+# Очистка старых бэкапов
+ExecStart=/bin/borg prune \
+  --keep-daily 90 \
+  --keep-monthly 12 \
+  --keep-yearly 1 \
+  ${REPO}

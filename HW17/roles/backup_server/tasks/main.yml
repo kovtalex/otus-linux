@@ -1,0 +1,42 @@
+---
+# tasks file for backup_server
+- name: Install packages
+  yum: pkg={{ item }} state=present
+  with_items:
+    - parted
+           
+- name: Add new partition /dev/sdb1
+  parted: 
+    device: /dev/sdb
+    number: 1
+    state: present
+    fs_type: xfs
+
+- name: Create File System
+  filesystem:
+    fstype: xfs
+    dev: /dev/sdb1
+
+- name: Add the user borg
+  user:
+    name: borg
+
+- name: Create a /var/backup directory
+  file:
+    path: /var/backup
+    state: directory
+    owner: borg
+    group: borg
+    mode: '0755'
+
+- name: Mount /dev/sdb1 to /var/backup
+  mount:
+    path: /var/backup
+    src: /dev/sdb1
+    fstype: xfs
+    state: mounted
+
+- name: Add master public key to server
+  authorized_key:
+    user: borg
+    key: "{{ hostvars['client'].master_public_key.stdout }}"

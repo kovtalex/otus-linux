@@ -1,0 +1,39 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+ENV['VAGRANT_EXPERIMENTAL'] = "disks"
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"    
+    config.vm.box_url = 'https://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box'
+    config.vm.box_download_checksum = '7e83943defcb5c4e9bebbe4184cce4585c82805a15e936b01b1e893b63dee2c5'
+    config.vm.box_download_checksum_type = 'sha256'
+
+    config.vm.provider "virtualbox" do |v|
+        v.memory = 512
+        v.cpus = 1
+    end
+
+    config.vm.define "client" do |client|
+        client.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "net1"
+        client.vm.hostname = "client"
+    end   
+
+    config.vm.define "backup_server" do |backup_server|
+        backup_server.vm.network "private_network", ip: "192.168.50.11", virtualbox__intnet: "net1"
+        backup_server.vm.hostname = "backupserver"
+        backup_server.vm.disk :disk, size: "2GB", name: "backup"
+    end
+       
+    # config.vm.provision "shell", inline: <<-SHELL
+    #   mkdir -p /var/backup
+    #   if ! (mount /dev/sdb1 /var/backup); then parted -s /dev/sdb mklabel gpt; parted /dev/sdb mkpart primary xfs 0% 100%; mkfs.xfs /dev/sdb1; mount /dev/sdb1 /var/backup; fi
+    # SHELL
+
+    config.vm.provision "ansible" do |ansible|
+        ansible.playbook = "playbook.yml"
+        ansible.become = true
+        ansible.limit = "all"
+        ansible.host_key_checking = "false"
+        ansible.raw_arguments = Shellwords.shellsplit(ENV['ANSIBLE_ARGS']) if ENV['ANSIBLE_ARGS']
+    end    
+end

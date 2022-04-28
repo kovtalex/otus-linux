@@ -1,0 +1,8 @@
+[Unit]
+Description=Borg Backup
+
+[Timer]
+OnUnitActiveSec={{ backup_frequency }}
+
+[Install]
+WantedBy=timers.target

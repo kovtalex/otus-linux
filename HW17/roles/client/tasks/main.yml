@@ -1,0 +1,83 @@
+---
+# tasks file for client
+# - name: Download systemd repo
+#   get_url:
+#     url: https://copr.fedorainfracloud.org/coprs/jsynacek/systemd-backports-for-centos-7/repo/epel-7/jsynacek-systemd-backports-for-centos-7-epel-7.repo
+#     dest: /etc/yum.repos.d/jsynacek-systemd-centos-7.repo
+#     validate_certs: no
+#     mode: '0644'
+
+# - name: check if we need to reboot after a systemd update
+#   shell: if [[ $(systemctl --version | awk NR\ ==\ 1\{print\ \$2\}) -eq 219 ]]; then /usr/bin/echo 'reboot'; else /usr/bin/echo 'no'; fi
+#   register: must_reboot
+
+# - name: Update systemd
+#   yum:
+#     name: systemd
+#     state: latest
+
+# - name: reboot if needed
+#   block:
+#   - shell: sleep 3 && systemctl reboot
+#     async: 300
+#     poll: 0
+#     ignore_errors: true
+
+#   - name: wait for system to come back online
+#     wait_for_connection:
+#       delay: 60
+#       timeout: 300
+#   when: '"reboot" in must_reboot.stdout'    
+
+- name: Create a .ssh directory
+  file:
+    path: /root/.ssh
+    state: directory
+    mode: '0700'
+
+- name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+  openssh_keypair:
+    path: /root/.ssh/id_rsa
+
+- name: Retrieve public key
+  shell: cat /root/.ssh/id_rsa.pub
+  register: master_public_key
+  changed_when: false
+
+- name: Ensure server is present in known_hosts file
+  shell: ssh-keyscan -H {{ hostvars['backup_server']['ansible_eth1']['ipv4']['address'] }} >> ~/.ssh/known_hosts
+  register: known_hosts_script
+  changed_when: "'found' not in known_hosts_script.stdout"
+
+- name: Copy systemd service
+  template:
+    src: borg-backup.service.j2
+    dest:  /etc/systemd/system/borg-backup.service
+    owner: root
+    group: root
+
+- name: Copy systemd timer
+  template:
+    src: borg-backup.timer.j2
+    dest:  /etc/systemd/system/borg-backup.timer
+    owner: root
+    group: root
+
+- name: Run Borg init
+  shell: "BORG_PASSPHRASE={{ passphrase }} borg init --encryption=repokey borg@{{ hostvars['backup_server']['ansible_eth1']['ipv4']['address'] }}:/var/backup/"
+  ignore_errors: true
+  tags: [ client ]
+
+- name: Enable a timer unit for borg backup service
+  systemd:
+    name: borg-backup.timer
+    state: started
+    enabled: yes
+  tags: [ client ]
+
+- name: Start a service unit for borg backup
+  systemd:
+    name: borg-backup.service
+    state: started
+    enabled: no
+  tags: [ client ]
