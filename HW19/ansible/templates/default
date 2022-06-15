@@ -1,0 +1,28 @@
+default menu.c32
+prompt 0
+timeout 150
+ONTIME local
+menu title OTUS PXE Boot Menu
+        label 1
+        menu label ^ Graph install CentOS 8.4
+        kernel /vmlinuz
+        initrd /initrd.img
+        append ip=enp0s3:dhcp inst.repo=http://{{ pxe_server }}/centos8
+        label 2
+        menu label ^ Text install CentOS 8.4
+        kernel /vmlinuz
+        initrd /initrd.img
+        append ip=enp0s3:dhcp inst.repo=http://{{ pxe_server }}/centos8 text
+        label 3
+        menu label ^ rescue installed system
+        kernel /vmlinuz
+        initrd /initrd.img
+        append ip=enp0s3:dhcp inst.repo=http://{{ pxe_server }}/centos8 rescue
+        label 4
+        menu label ^ Auto-install CentOS 8.4
+        #Загрузка данного варианта по умолчанию
+        menu default
+        kernel /vmlinuz
+        initrd /initrd.img
+        append ip=enp0s3:dhcp inst.ks=http://{{ pxe_server }}/centos8/ks.cfg
+        inst.repo=http://{{ pxe_server }}/centos8

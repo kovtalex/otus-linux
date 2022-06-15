@@ -1,5 +1,4 @@
 ---
-# handlers file for filebeat
 - name: filebeat restart
   systemd:
     name: filebeat
