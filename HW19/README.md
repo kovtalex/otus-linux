@@ -489,7 +489,7 @@ server.vm.provision "ansible" do |ansible|
 end
 ```
 
-> [Готовый плейбук Ansible](./img/ansible/provision.yml)
+> [Готовый плейбук Ansible](./ansible/provision.yml)
 
 ## Рекомендуемые источники
 
