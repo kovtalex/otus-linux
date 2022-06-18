@@ -1,0 +1,15 @@
+---
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
+- name: Enable EPEL Repository on CentOS 7
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install packages
+  yum: pkg={{ item }} state=present update_cache=yes
+  with_items:
+    - openvpn
+    - iperf3

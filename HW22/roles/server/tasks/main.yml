@@ -1,0 +1,27 @@
+---
+- name: Check if /etc/openvpn/static.key file exists (to determine if new install)
+  stat:
+    path: /etc/openvpn/static.key
+  register: static_key_stat
+
+- name: Generating static key
+  command: openvpn --genkey --secret /etc/openvpn/static.key
+  when:
+    - static_key_stat.stat.exists == False
+
+- name: Retrieve static key
+  command: cat /etc/openvpn/static.key
+  register: static_key
+  changed_when: false
+
+- name: Add config
+  template:
+    src: server.conf.j2
+    dest: /etc/openvpn/server.conf
+    mode: '0644'
+
+- name: Start OpenVPN service
+  systemd:
+    name: openvpn@server
+    enabled: true
+    state: started
