@@ -1,0 +1,7 @@
+ipa_realm: HOME.LOCAL
+ipa_domain: home.local
+ipa_server_hostname: ipaserver.home.local
+ipa_client_hostname: ipaclient.home.local
+
+ipa_admin_password: password
+ipa_dm_password: password

@@ -1,0 +1,119 @@
+---
+- name: Bootsrap
+  hosts: all
+  become: true
+  vars_files:
+    - defaults/main.yml
+  tasks:
+    - name: Set timezone to Europe/Moscow
+      timezone:
+        name: Europe/Moscow
+
+    - name: Add an entry in the /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars['ipaserver']['ansible_eth1']['ipv4']['address'] }} {{ ipa_server_hostname }} ipaserver"
+        state: present
+
+    - name: Enable firewalld service
+      systemd:
+        name: firewalld
+        enabled: true
+        state: started
+
+- name: Set up FreeIPA Server
+  hosts: ipaserver
+  become: true
+  vars_files:
+    - defaults/main.yml
+  tasks:
+    - name: Install packages
+      yum: pkg={{ item }} state=latest update_cache=yes
+      with_items:
+        - ipa-server
+        - ipa-server-dns
+        - bind-dyndb-ldap
+        - nss
+
+    - name: Configure firewall
+      firewalld:
+        service: "{{ item }}"
+        permanent: true
+        state: enabled
+        immediate: true
+      with_items:
+        - http
+        - https
+        - ldap
+        - ldaps
+        - kerberos
+        - kpasswd
+        - dns
+        - ntp
+
+    - name: Configure FreeIPA Server
+      command: >
+        ipa-server-install -U \
+          -r {{ ipa_realm }} \
+          -n {{ ipa_domain }} \
+          -p {{ ipa_dm_password }} \
+          -a {{ ipa_admin_password }} \
+          --hostname={{ ipa_server_hostname }} \
+          --ip-address={{ hostvars['ipaserver']['ansible_eth1']['ipv4']['address'] }} \
+          --mkhomedir \
+          --setup-dns \
+          --auto-forwarders \
+          --no-reverse
+      args:
+        creates: /etc/ipa/default.conf
+
+- name: Set up FreeIPA Client
+  hosts: ipaclient
+  become: true
+  vars_files:
+    - defaults/main.yml
+  roles:
+    - role: resolv.conf
+  tasks:
+    - name: Install packages
+      yum: pkg={{ item }} state=present update_cache=yes
+      with_items:
+        - ipa-client
+
+    - name: Configure FreeIPA Client
+      command: >
+        ipa-client-install -U \
+          -p admin \
+          -w {{ ipa_admin_password }} \
+          --server={{ ipa_server_hostname }} \
+          --ip-address={{ hostvars['ipaclient']['ansible_eth1']['ipv4']['address'] }} \
+          --domain={{ ipa_domain }} \
+          --realm={{ ipa_realm }} \
+          --hostname={{ ipa_client_hostname }} \
+          --mkhomedir
+      args:
+        creates: /etc/ipa/default.conf
+
+
+    - name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
+      openssh_keypair:
+        path: /home/vagrant/.ssh/id_rsa
+        owner: vagrant
+        group: vagrant
+
+    - name: Retrieve public key
+      command: cat /home/vagrant/.ssh/id_rsa.pub
+      register: user_public_key
+      changed_when: false
+
+    - name: Add user test_user
+      ipa_user:
+        ipa_host: "{{ ipa_server_hostname }}"
+        ipa_user: admin
+        ipa_pass: "{{ ipa_dm_password }}"
+        name: test_user
+        givenname: test_user
+        sn: test_user
+        loginshell: /bin/bash
+        sshpubkey:
+          - "{{ user_public_key.stdout }}"

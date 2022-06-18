@@ -1,0 +1,31 @@
+Vagrant.configure("2") do |config|
+
+    config.vm.box = "centos/7"
+    config.vm.box_url = 'https://cloud.centos.org/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-2004_01.VirtualBox.box'
+    config.vm.box_download_checksum = '7e83943defcb5c4e9bebbe4184cce4585c82805a15e936b01b1e893b63dee2c5'
+    config.vm.box_download_checksum_type = 'sha256'
+    config.vm.box_check_update = false
+
+    config.vm.provision "ansible" do |ansible|
+            ansible.playbook = "ansible/provision.yml"
+            ansible.limit = "all"
+    end
+
+    config.vm.define "ipaserver" do |server|
+        server.vm.host_name = 'ipaserver.home.local'
+        server.vm.network :private_network, ip: "192.168.56.11"
+
+        server.vm.network "forwarded_port", guest: 80, host: 80
+        server.vm.network "forwarded_port", guest: 443, host: 443
+
+        server.vm.provider "virtualbox" do |vb|
+            vb.memory = 2048
+            vb.cpus = "2"
+          end
+    end
+    
+    config.vm.define "ipaclient" do |client|
+        client.vm.host_name = 'ipaclient.home.local'
+        client.vm.network :private_network, ip: "192.168.56.12"
+     end    
+end

@@ -1,5 +1,6 @@
 .vagrant
 *.tar.gz
+*.vdi
 
 *.retry
 *.bak
