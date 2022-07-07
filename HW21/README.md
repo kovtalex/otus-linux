@@ -33,7 +33,7 @@ OSPF — протокол динамической маршрутизации, �
 - Internal router (внутренний маршрутизатор) — маршрутизатор, все интерфейсы которого находятся в одной и той же области.
 - Backbone router (магистральный маршрутизатор) — это маршрутизатор, который находится в магистральной зоне (area 0).
 - ABR (пограничный маргрутизатор области) — маршрутизатор, интерфейсы которого подключены к разным областям.
-- ASBR (Граничный маршрутизатор автономной системы) — это маршрутизатор, у которого интерфейс подключен к внешней сети.
+- ASBR (граничный маршрутизатор автономной системы) — это маршрутизатор, у которого интерфейс подключен к внешней сети.
 
 Также с помощью OSPF можно настроить ассиметричный роутинг.
 
@@ -259,7 +259,7 @@ echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable > /etc/ap
 
 ```bash
 sudo apt update
-sudo apt install frr frr-pythontools
+sudo apt install frr frr-pythontools -y
 ```
 
 - Разрешаем (включаем) маршрутизацию транзитных пакетов:
@@ -272,7 +272,7 @@ sysctl net.ipv4.conf.all.forwarding=1
 
 Для этого открываем в редакторе файл /etc/frr/daemons и меняем в нём параметры для пакетов zebra и ospfd на yes:
 
-/etc/frr/daemons
+vim /etc/frr/daemons
 
 ```bash
 zebra=yes
@@ -306,36 +306,35 @@ pathd=no
 - Посмотреть в linux: ip a | grep inet
 
 ```bash
-root@router1:~# ip a | grep "inet "
+ip a | grep "inet "
     inet 127.0.0.1/8 scope host lo
     inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic enp0s3
     inet 10.0.10.1/30 brd 10.0.10.3 scope global enp0s8
     inet 10.0.12.1/30 brd 10.0.12.3 scope global enp0s9
     inet 192.168.10.1/24 brd 192.168.10.255 scope global enp0s10
     inet 192.168.50.10/24 brd 192.168.50.255 scope global enp0s16
-root@router1:~#
 ```
 
 - Зайти в интерфейс FRR и посмотреть информацию об интерфейсах
 
 ```bash
-root@router1:~# vtysh
-Hello, this is FRRouting (version 8.1).
+vtysh
 
+Hello, this is FRRouting (version 8.2.2).
 Copyright 1996-2005 Kunihiro Ishiguro, et al.
 
-router1# show interface brief
-Interface Status VRF Addresses
---------- ------ --- ---------
-enp0s3 up default 10.0.2.15/24
-enp0s8 up default 10.0.10.1/30
-enp0s9 up default 10.0.12.1/30
-enp0s10 up default 192.168.10.1/24
-enp0s16 up default 192.168.50.10/24
-lo up default
+show interface brief
 
-router1# exit
-root@router1:~#
+Interface       Status  VRF             Addresses
+---------       ------  ---             ---------
+enp0s3          up      default         10.0.2.15/24
+enp0s8          up      default         10.0.10.1/30
+enp0s9          up      default         10.0.12.1/30
+enp0s10         up      default         192.168.10.1/24
+enp0s16         up      default         192.168.50.10/24
+lo              up      default   
+
+exit
 ```
 
 В обоих примерах мы увидем имена сетевых интерфейсов, их ip-адреса и маски подсети. Исходя из схемы мы понимаем, что для настройки OSPF нам достаточно описать интерфейсы enp0s8, enp0s9, enp0s10
@@ -344,7 +343,7 @@ root@router1:~#
 
 ```bash
 !Указание версии FRR
-frr version 8.1
+frr version 8.2.2
 frr defaults traditional
 !Указываем имя машины
 hostname router1
@@ -422,6 +421,12 @@ default-information originate always
 
 ```bash
 ls -l /etc/frr
+
+total 20
+-rw-r----- 1 frr frr 2620 Jul  6 20:57 daemons
+-rw-r----- 1 frr frr 2404 Jul  6 21:05 frr.conf
+-rw-r----- 1 frr frr 5411 Mar 13 20:43 support_bundle_commands.conf
+-rw-r----- 1 frr frr   32 Mar 13 20:43 vtysh.conf
 ```
 
 Если права или владелец файла указан неправильно, то нужно поменять владельца и назначить правильные права, например:
@@ -434,7 +439,7 @@ chmod 640 /etc/frr/frr.conf
 - Перезапускаем FRR и добавляем его в автозагрузку
 
 ```bash
-systemct restart frr
+systemctl restart frr
 systemctl enable frr
 ```
 
@@ -442,6 +447,31 @@ systemctl enable frr
 
 ```bash
 systemctl status frr
+
+● frr.service - FRRouting
+     Loaded: loaded (/lib/systemd/system/frr.service; enabled; vendor preset: enabled)
+     Active: active (running) since Wed 2022-07-06 21:08:10 UTC; 12s ago
+       Docs: https://frrouting.readthedocs.io/en/latest/setup.html
+   Main PID: 4819 (watchfrr)
+     Status: "FRR Operational"
+      Tasks: 9 (limit: 1131)
+     Memory: 13.3M
+     CGroup: /system.slice/frr.service
+             ├─4819 /usr/lib/frr/watchfrr -d -F traditional zebra ospfd staticd
+             ├─4837 /usr/lib/frr/zebra -d -F traditional -A 127.0.0.1 -s 90000000
+             ├─4842 /usr/lib/frr/ospfd -d -F traditional -A 127.0.0.1
+             └─4845 /usr/lib/frr/staticd -d -F traditional -A 127.0.0.1
+
+Jul 06 21:08:05 router1 zebra[4837]: [VTVCM-Y2NW3] Configuration Read in Took: 00:00:00
+Jul 06 21:08:05 router1 ospfd[4842]: [VTVCM-Y2NW3] Configuration Read in Took: 00:00:00
+Jul 06 21:08:05 router1 staticd[4845]: [VTVCM-Y2NW3] Configuration Read in Took: 00:00:00
+Jul 06 21:08:05 router1 watchfrr[4819]: [ZJW5C-1EHNT] restart all process 4820 exited with non-zero status 2
+Jul 06 21:08:10 router1 watchfrr[4819]: [QDG3Y-BY5TN] zebra state -> up : connect succeeded
+Jul 06 21:08:10 router1 watchfrr[4819]: [QDG3Y-BY5TN] ospfd state -> up : connect succeeded
+Jul 06 21:08:10 router1 watchfrr[4819]: [QDG3Y-BY5TN] staticd state -> up : connect succeeded
+Jul 06 21:08:10 router1 frrinit.sh[4800]:  * Started watchfrr
+Jul 06 21:08:10 router1 watchfrr[4819]: [KWE5Q-QNGFC] all daemons up, doing startup-complete notify
+Jul 06 21:08:10 router1 systemd[1]: Started FRRouting.
 ```
 
 Если мы правильно настроили OSPF, то с любого хоста нам должны быть доступны сети:
@@ -458,27 +488,42 @@ systemctl status frr
 - попробуем сделать ping до ip-адреса 192.168.30.1
 
 ```bash
-root@router1:~# ping 192.168.30.1
+ping 192.168.30.1
+
+PING 192.168.30.1 (192.168.30.1) 56(84) bytes of data.
+64 bytes from 192.168.30.1: icmp_seq=1 ttl=64 time=0.391 ms
+64 bytes from 192.168.30.1: icmp_seq=2 ttl=64 time=0.345 ms
+64 bytes from 192.168.30.1: icmp_seq=3 ttl=64 time=0.608 ms
+64 bytes from 192.168.30.1: icmp_seq=4 ttl=64 time=0.555 ms
+^C
+--- 192.168.30.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3072ms
+rtt min/avg/max/mdev = 0.345/0.474/0.608/0.109 ms
 ```
 
 - Запустим трассировку до адреса 192.168.30.1
 
 ```bash
-root@router1:~# traceroute 192.168.30.1
+traceroute 192.168.30.1
+
+traceroute to 192.168.30.1 (192.168.30.1), 30 hops max, 60 byte packets
+ 1  192.168.30.1 (192.168.30.1)  0.775 ms  0.827 ms  0.807 ms
 ```
 
 Попробуем отключить интерфейс enp0s9 и немного подождем и снова запустим трассировку до ip-адреса 192.168.30.1
 
 ```bash
-root@router1:~# ifconfig enp0s9 down
-root@router1:~# ip a | grep enp0s9
+ifconfig enp0s9 down
+
+ip a | grep enp0s9
 4: enp0s9: <BROADCAST,MULTICAST> mtu 1500 qdisc fq_codel state DOWN group
 default qlen 1000
-root@router1:~# traceroute 192.168.30.1
+
+traceroute 192.168.30.1
+
 traceroute to 192.168.30.1 (192.168.30.1), 30 hops max, 60 byte packets
-1 10.0.10.2 (10.0.10.2) 0.522 ms 0.479 ms 0.460 ms
-2 192.168.30.1 (192.168.30.1) 0.796 ms 0.777 ms 0.644 ms
-root@router1:~#
+ 1  10.0.10.2 (10.0.10.2)  0.536 ms  0.498 ms  0.484 ms
+ 2  192.168.30.1 (192.168.30.1)  1.354 ms  1.337 ms  1.319 ms
 ```
 
 Как мы видим, после отключения интерфейса сеть 192.168.30.0/24 нам остаётся доступна.
@@ -486,8 +531,31 @@ root@router1:~#
 Также мы можем проверить из интерфейса vtysh какие маршруты мы видим на данный момент:
 
 ```bash
-root@router1:~#
-root@router1:~# vtysh
+vtysh
+
+Hello, this is FRRouting (version 8.2.2).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+show ip route ospf
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+O   10.0.10.0/30 [110/100] is directly connected, enp0s8, weight 1, 00:05:51
+O>* 10.0.11.0/30 [110/200] via 10.0.10.2, enp0s8, weight 1, 00:03:29
+O>* 10.0.12.0/30 [110/300] via 10.0.10.2, enp0s8, weight 1, 00:03:04
+O   192.168.10.0/24 [110/100] is directly connected, enp0s10, weight 1, 00:07:04
+O>* 192.168.20.0/24 [110/200] via 10.0.10.2, enp0s8, weight 1, 00:05:39
+O>* 192.168.30.0/24 [110/300] via 10.0.10.2, enp0s8, weight 1, 00:03:29
+```
+
+- Включим интерфейс обратно
+
+```bash
+ifconfig enp0s9 up
 ```
 
 Настройка OSPF c помощью Ansible:
@@ -547,7 +615,7 @@ root@router1:~# vtysh
         enabled: true
 ```
 
-Файлы daemons и frr.conf должны лежать в каталоге ansible/template.
+Файлы daemons и frr.conf должны лежать в каталоге ansible/templates.
 
 Давайте подробнее рассмотрим эти файлы. Содержимое файла daemons одинаково на всех хостах, а вот содержание файла frr.conf на всех хостах будет разное.
 
@@ -558,7 +626,7 @@ root@router1:~# vtysh
 Посмотреть, какую информацию о сервере собрал Ansible можно с помощью команды:
 
 ```bash
-ansible router1 -i ansible/hosts -m setup -e "host_key_checking = false"
+ansible router1 -i ansible/hosts -m setup -e "host_key_checking=false"
 ```
 
 Команда выполнятся из каталога проекта (где находится Vagrantfile).
@@ -605,22 +673,59 @@ router3 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_
 Далее, выбираем один из роутеров, на котором изменим «стоимость интерфейса». Например поменяем стоимость интерфейса enp0s8 на router1:
 
 ```bash
-root@router1:~# vtysh
+vtysh
 
-Hello, this is FRRouting (version 8.1).
+Hello, this is FRRouting (version 8.2.2).
 Copyright 1996-2005 Kunihiro Ishiguro, et al.
 
-router1# conf t
+conf t
 int enp0s8
-router1(config-if)# ip ospf cost 1000
-router1(config-if)# exit
-router1(config)# exit
-router1# show ip route ospf
-
+ip ospf cost 1000
+exit
+exit
 show ip route ospf
+
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+O   10.0.10.0/30 [110/300] via 10.0.12.2, enp0s9, weight 1, 00:00:12
+O>* 10.0.11.0/30 [110/200] via 10.0.12.2, enp0s9, weight 1, 00:00:12
+O   10.0.12.0/30 [110/100] is directly connected, enp0s9, weight 1, 00:03:33
+O   192.168.10.0/24 [110/100] is directly connected, enp0s10, weight 1, 00:03:33
+O>* 192.168.20.0/24 [110/300] via 10.0.12.2, enp0s9, weight 1, 00:00:12
+O>* 192.168.30.0/24 [110/200] via 10.0.12.2, enp0s9, weight 1, 00:02:59
 ```
 
-После внесения данных настроек, мы видим, что маршрут до сети 192.168.20.0/30 теперь пойдёт через router2, но обратный трафик от router2 пойдёт по другому пути. 
+На router2
+
+```bash
+vtysh
+
+Hello, this is FRRouting (version 8.2.2).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+show ip route ospf
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+O   10.0.10.0/30 [110/100] is directly connected, enp0s8, weight 1, 00:04:38
+O   10.0.11.0/30 [110/100] is directly connected, enp0s9, weight 1, 00:04:38
+O>* 10.0.12.0/30 [110/200] via 10.0.10.1, enp0s8, weight 1, 00:03:58
+  *                        via 10.0.11.1, enp0s9, weight 1, 00:03:58
+O>* 192.168.10.0/24 [110/200] via 10.0.10.1, enp0s8, weight 1, 00:03:58
+O   192.168.20.0/24 [110/100] is directly connected, enp0s10, weight 1, 00:04:38
+O>* 192.168.30.0/24 [110/200] via 10.0.11.1, enp0s9, weight 1, 00:03:58
+```
+
+После внесения данных настроек, мы видим, что маршрут до сети 192.168.20.0/30 теперь пойдёт через router3, но обратный трафик от router2 пойдёт по другому пути.
 
 Давайте это проверим:
 
@@ -628,23 +733,17 @@ show ip route ospf
 - На router2 запускаем tcpdump, который будет смотреть трафик только на порту enp0s9:
 
 ```bash
-root@router2:~# tcpdump -i enp0s9
-tcpdump: verbose output suppressed, use -v or -vv for full protocol
-decode
-listening on enp0s9, link-type EN10MB (Ethernet), capture size 262144
-bytes
-19
-19:03:00.185258 IP 192.168.10.1 > router2: ICMP echo request, id 6, seq
-108, length 64
-19:03:01.186977 IP 192.168.10.1 > router2: ICMP echo request, id 6, seq
-109, length 64
-19:03:02.188563 IP 192.168.10.1 > router2: ICMP echo request, id 6, seq
-110, length 64
-19:03:02.540289 IP router2 > ospf-all.mcast.net: OSPFv2, Hello, length 48
-19:03:02.542198 IP 10.0.11.1 > ospf-all.mcast.net: OSPFv2, Hello, length
-48
-19:03:03.189952 IP 192.168.10.1 > router2: ICMP echo request, id 6, seq
-111, length 64
+tcpdump -i enp0s9
+
+23:17:23.793254 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 51, length 64
+23:17:24.794375 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 52, length 64
+23:17:25.809719 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 53, length 64
+23:17:26.832828 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 54, length 64
+23:17:27.857653 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 55, length 64
+23:17:28.858986 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 56, length 64
+23:17:29.873955 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 57, length 64
+23:17:30.876495 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 58, length 64
+23:17:31.878297 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 59, length 64
 ```
 
 > Видим что данный порт только получает ICMP-трафик с адреса 192.168.10.1
@@ -652,19 +751,18 @@ bytes
 На router2 запускаем tcpdump, который будет смотреть трафик только на порту enp0s8:
 
 ```bash
-root@router2:~# tcpdump -i enp0s8
-tcpdump: verbose output suppressed, use -v or -vv for full protocol
-decode
-listening on enp0s8, link-type EN10MB (Ethernet), capture size 262144
-bytes
-19:05:24.410547 IP router2 > 192.168.10.1: ICMP echo reply, id 6, seq
-248, length 64
-19:05:25.461411 IP router2 > 192.168.10.1: ICMP echo reply, id 6, seq
-249, length 64
-19:05:26.496036 IP router2 > 192.168.10.1: ICMP echo reply, id 6, seq
-250, length 64
-19:05:27.498524 IP router2 > 192.168.10.1: ICMP echo reply, id 6, seq
-251, length 64
+tcpdump -i enp0s8
+
+23:19:13.594894 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 159, length 64
+23:19:14.595704 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 160, length 64
+23:19:15.601049 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 161, length 64
+23:19:16.624664 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 162, length 64
+23:19:17.648986 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 163, length 64
+23:19:18.672813 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 164, length 64
+23:19:19.697714 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 165, length 64
+23:19:20.727868 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 166, length 64
+23:19:21.727990 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 167, length 64
+23:19:22.736613 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 168, length 64
 ```
 
 > Видим что данный порт только отправляет ICMP-трафик на адрес 192.168.10.1
@@ -717,22 +815,37 @@ ip ospf cost 1000
 Поменяем стоимость интерфейса enp0s8 на router2:
 
 ```bash
-router2# conf t
-router2(config)# int enp0s8
-router2(config-if)# ip ospf cost 1000
-router2(config-if)# exit
-router2(config)# exit
-router2#
-router2# show ip route ospf
+vtysh
+
+Hello, this is FRRouting (version 8.2.2).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+conf t
+int enp0s8
+ip ospf cost 1000
+exit
+exit
+
+show ip route ospf
+
 Codes: K - kernel route, C - connected, S - static, R - RIP,
-O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
-T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
-f - OpenFabric,
-> - selected route, * - FIB route, q - queued, r - rejected, b - backup
-t - trapped, o - offload failure
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+O   10.0.10.0/30 [110/1000] is directly connected, enp0s8, weight 1, 00:00:10
+O   10.0.11.0/30 [110/100] is directly connected, enp0s9, weight 1, 00:24:23
+O>* 10.0.12.0/30 [110/200] via 10.0.11.1, enp0s9, weight 1, 00:00:10
+O>* 192.168.10.0/24 [110/300] via 10.0.11.1, enp0s9, weight 1, 00:00:10
+O   192.168.20.0/24 [110/100] is directly connected, enp0s10, weight 1, 00:24:23
+O>* 192.168.30.0/24 [110/200] via 10.0.11.1, enp0s9, weight 1, 00:23:43
+
+exit
 ```
 
-После внесения данных настроек, мы видим, что маршрут до сети 192.168.10.0/30 пойдёт через router2.
+После внесения данных настроек, мы видим, что маршрут до сети 192.168.10.0/30 пойдёт через router3.
 
 Давайте это проверим:
 
@@ -741,13 +854,24 @@ t - trapped, o - offload failure
 
 ```bash
 tcpdump -i enp0s9
-tcpdump: verbose output suppressed, use -v or -vv for full protocol
-decode
-listening on enp0s9, link-type EN10MB (Ethernet), capture size 262144
-bytes
-19:30:28.551713 IP 192.168.10.1 > router2: ICMP echo request, id 6, seq
-1737, length 64
-19:30:28.551801 IP router2 > 192.168.10.1: ICMP echo reply, id 6, seq
+
+
+23:37:24.812303 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 34, length 64
+23:37:24.812336 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 34, length 64
+23:37:25.896896 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 35, length 64
+23:37:25.896941 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 35, length 64
+23:37:26.898998 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 36, length 64
+23:37:26.899024 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 36, length 64
+23:37:27.911954 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 37, length 64
+23:37:27.912088 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 37, length 64
+23:37:28.913899 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 38, length 64
+23:37:28.913937 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 38, length 64
+23:37:29.937532 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 39, length 64
+23:37:29.937560 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 39, length 64
+23:37:30.930521 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 40, length 64
+23:37:30.930555 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 40, length 64
+23:37:32.108018 IP 192.168.10.1 > router2: ICMP echo request, id 10, seq 41, length 64
+23:37:32.108048 IP router2 > 192.168.10.1: ICMP echo reply, id 10, seq 41, length 64
 ```
 
 > Теперь мы видим, что трафик между роутерами ходит симметрично.
@@ -766,11 +890,11 @@ symmetric_routing: false
 
 ```bash
 {% if ansible_hostname == 'router1' %}
-ip ospf cost 1000
+  ip ospf cost 1000
 {% elif ansible_hostname == 'router2' and symmetric_routing == true %}
-ip ospf cost 1000
+  ip ospf cost 1000
 {% else %}
-!ip ospf cost 450
+  !ip ospf cost 45
 {% endif %}
 ```
 
