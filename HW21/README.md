@@ -798,9 +798,9 @@ tcpdump -i enp0s8
 
 ```bash
 {% if ansible_hostname == 'router1' %}
-ip ospf cost 1000
+  ip ospf cost 1000
 {% else %}
-!ip ospf cost 450
+  !ip ospf cost 450
 {% endif %}
 ```
 
