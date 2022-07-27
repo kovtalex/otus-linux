@@ -9,7 +9,7 @@
     - { regexp: '^#\$ModLoad imudp', line: '$ModLoad imudp' }
     - { regexp: '^#\$UDPServerRun 514', line: '$UDPServerRun 514' }
     - { regexp: '^#\$ModLoad imtcp', line: '$ModLoad imtcp' }
-    - { regexp: '^#\$InputTCPServerRun 514', line: '$InputTCPServerRun 514' }    
+    - { regexp: '^#\$InputTCPServerRun 514', line: '$InputTCPServerRun 514' }
   notify:
     - rsyslog restart
 
@@ -19,7 +19,7 @@
     block: |
       $template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"
       *.* ?RemoteLogs
-      & ~  
+      & ~
   notify:
     - rsyslog restart
 
