@@ -1,0 +1,242 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Install traceroute to Debian or Ubuntu
+    apt:
+      name:
+        - traceroute
+        - tcpdump
+      state: present
+      update_cache: true
+    when: (ansible_os_family == "Debian") or (ansible_os_family == "Ubuntu")
+
+  - name: Install traceroute to CentOS
+    yum:
+      name:
+        - traceroute
+        - tcpdump
+      state: present
+      update_cache: true
+    when: (ansible_os_family == "RedHat")
+
+  - name: Knock Server
+    block:
+      - name: Install Knock Server
+        yum:
+          name:
+            - libpcap
+            - http://li.nux.ro/download/nux/misc/el7/x86_64/knock-server-0.7-1.el7.nux.x86_64.rpm
+          state: present
+
+      - name: Copy knock config
+        copy:
+          src: knockd.conf
+          dest: /etc/knockd.conf
+          owner: root
+          group: root
+          mode: 0600
+
+      - name: Start Knock Server
+        systemd:
+          name: knockd
+          enabled: true
+          state: started
+    when: (ansible_hostname == "inetRouter")
+
+  - name: Install Knock Client
+    yum:
+      name:
+        - http://li.nux.ro/download/nux/misc/el7/x86_64/knock-0.7-1.el7.nux.x86_64.rpm
+      state: present
+    when: (ansible_hostname == "centralRouter")
+
+  - name: Install nginx on centralServer
+    block:
+      - name: Add nginx repo
+        copy:
+          src: nginx.repo
+          dest: /etc/yum.repos.d/
+          mode: '0644'
+
+      - name: Install nginx
+        yum:
+          name:
+            - nginx
+          state: present
+          update_cache: true
+
+      - name: Change nginx port to 8080
+        replace:
+          path: /etc/nginx/conf.d/default.conf
+          regexp: '    listen       80;'
+          replace: '    listen       8080;'
+
+      - name: Start nginx
+        systemd:
+          name: nginx
+          enabled: true
+          state: started
+    when: (ansible_hostname == "centralServer")
+
+  - name: Set up inetRouter2
+    block:
+      - name: Install iptables
+        yum:
+          name:
+            - iptables
+            - iptables-services
+          state: present
+          update_cache: true
+
+      - name: Copy iptables config
+        template:
+          src: inetRouter2_iptables.j2
+          dest: /etc/sysconfig/iptables
+          owner: root
+          group: root
+          mode: 0600
+
+      - name: Start and enable iptables service
+        service:
+          name: iptables
+          state: restarted
+          enabled: true
+    when: (ansible_hostname == "inetRouter2")
+
+  - name: Set up NAT on inetRouter
+    block:
+      - name: Install iptables
+        yum:
+          name:
+            - iptables
+            - iptables-services
+          state: present
+          update_cache: true
+
+      - name: Copy iptables config
+        template:
+          src: inetRouter_iptables.j2
+          dest: /etc/sysconfig/iptables
+          owner: root
+          group: root
+          mode: 0600
+
+      - name: Start and enable iptables service
+        service:
+          name: iptables
+          state: restarted
+          enabled: true
+    when: (ansible_hostname == "inetRouter")
+
+  - name: Set up forward packages across routers
+    sysctl:
+      name: net.ipv4.conf.all.forwarding
+      value: '1'
+      state: present
+    when: "'routers' in group_names"
+
+  - name: Set up route on inetRouter eth1
+    template:
+      src: inetRouter_route_eth1.j2
+      dest: /etc/sysconfig/network-scripts/route-eth1
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "inetRouter")
+
+  - name: Set up route on inetRouter2 eth1
+    template:
+      src: inetRouter2_route_eth1.j2
+      dest: /etc/sysconfig/network-scripts/route-eth1
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "inetRouter2")
+
+  # echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+  - name: Disable default route
+    lineinfile:
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth0
+      line: DEFROUTE=no
+    when: (ansible_hostname == "centralRouter") or (ansible_hostname == "centralServer")
+
+  # echo "GATEWAY=192.168.255.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
+  - name: Add default gateway for centralRouter
+    lineinfile:
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth1
+      line: GATEWAY=192.168.255.1
+    when: (ansible_hostname == "centralRouter")
+
+  # echo "GATEWAY=192.168.0.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
+  - name: Add default gateway for centralServer
+    lineinfile:
+      dest: /etc/sysconfig/network-scripts/ifcfg-eth1
+      line: GATEWAY=192.168.0.1
+    when: (ansible_hostname == "centralServer")
+
+  - name: Set up route on centralRouter eth5
+    template:
+      src: centralRouter_route_eth5.j2
+      dest: /etc/sysconfig/network-scripts/route-eth5
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "centralRouter")
+
+  - name: Set up route on centralRouter eth6
+    template:
+      src: centralRouter_route_eth6.j2
+      dest: /etc/sysconfig/network-scripts/route-eth6
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "centralRouter")
+
+  - name: Set up route on office1Router
+    template:
+      src: office1Router_route.j2
+      dest: /etc/netplan/50-vagrant.yaml
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "office1Router")
+
+  - name: Set up route on office1Server
+    template:
+      src: office1Server_route.j2
+      dest: /etc/netplan/50-vagrant.yaml
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "office1Server")
+
+  - name: Set up route on office2Router
+    template:
+      src: office2Router_route.j2
+      dest: /etc/network/interfaces
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "office2Router")
+
+  - name: Set up route on office2Server
+    template:
+      src: office2Server_route.j2
+      dest: /etc/network/interfaces
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname == "office2Server")
+
+  - name: reboot hosts
+    block:
+    - shell: systemctl reboot
+      async: 300
+      poll: 0
+      ignore_errors: true
+
+    - name: wait for system to come back online
+      wait_for_connection:
+        delay: 60
+        timeout: 300
