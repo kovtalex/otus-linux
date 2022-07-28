@@ -1,0 +1,21 @@
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - 192.168.2.67/26
+      routes:
+      - to: 0.0.0.0/0
+        via: 192.168.2.65
+    enp0s9:
+      dhcp4: no
+    enp0s19:
+      addresses:
+      - 192.168.50.23/24
+  vlans:
+    vlan200:
+      id: 200
+      link: enp0s9
+      addresses: [10.10.10.254/24]
