@@ -59,7 +59,7 @@ MACHINES = {
         :box_name => "ubuntu/focal64",
         :vm_name => "testClient1",
         :net => [
-            {ip: '192.168.2.66', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "test1-net"},
+            {ip: '192.168.2.66', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "internal-net"},
             {adapter: 3, auto_config: false, virtualbox__intnet: "client1server1-net"},            
             {ip: '192.168.50.22', adapter: 8},
         ]
@@ -68,7 +68,7 @@ MACHINES = {
         :box_name => "ubuntu/focal64",
         :vm_name => "testClient2",
         :net => [
-            {ip: '192.168.2.67', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "test1-net"},
+            {ip: '192.168.2.67', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "internal-net"},
             {adapter: 3, auto_config: false, virtualbox__intnet: "client2server2-net"},            
             {ip: '192.168.50.23', adapter: 8},
         ]
@@ -77,7 +77,7 @@ MACHINES = {
         :box_name => "ubuntu/focal64",
         :vm_name => "testServer1",
         :net => [
-            {ip: '192.168.2.68', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "test1-net"},
+            {ip: '192.168.2.68', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "internal-net"},
             {adapter: 3, auto_config: false, virtualbox__intnet: "client1server1-net"},            
             {ip: '192.168.50.24', adapter: 8},
         ]
@@ -86,7 +86,7 @@ MACHINES = {
         :box_name => "ubuntu/focal64",
         :vm_name => "testServer2",
         :net => [
-            {ip: '192.168.2.69', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "test1-net"},
+            {ip: '192.168.2.69', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "internal-net"},
             {adapter: 3, auto_config: false, virtualbox__intnet: "client2server2-net"},            
             {ip: '192.168.50.25', adapter: 8},
         ]
